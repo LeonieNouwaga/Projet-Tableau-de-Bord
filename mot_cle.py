@@ -51,29 +51,45 @@ def decouper_liste(liste, n):
 # extrait les mots cles d'un article
 def extraire_mots_cles(article_xml):
     mots = []
-
-    #cherche toutes les balises keyword dans le fichier xml de l'article
+    # On récupère les mots bruts
     kws = article_xml.findall('.//Keyword')
-    
-    # pour une balise trouvée on recup le texte 
     for k in kws:
         if k is not None and k.text:
             mots.append(k.text.strip())
 
-    # nombre de mots bruts trouvés
-    if mots:
-        print(f"Mots bruts trouvés dans l'article: {len(mots)}")
-
     donnees_nettoyees = []
-    for terme in mots:
-        #enlève les espaces autour et met la 1ère lettre en majuscule 
-        t = terme.strip().capitalize()
-        
-        #filtrage le mot doit faire plus de 1 caractère et moins de 100 et vérifier qu'il n'est pas déjà dans la liste pour éviter les doublons
-        if 1 < len(t) < 100 and t not in donnees_nettoyees:
-            donnees_nettoyees.append(t)
+    
+    symboles_a_supprimer = "()[].,;:\'\""
 
-    #renvoie la liste propre des mots-clés de l'article
+    for terme in mots:
+        #remplace chaque symbole par du vide
+        t = terme
+        for symbole in symboles_a_supprimer:
+            t = t.replace(symbole, "")
+        
+        #refait un strip pour les espaces restants
+        t = t.strip() #pour nettoyer
+
+        if not t: continue
+        # si le mot contient un chiffre on le jette
+        if any(char.isdigit() for char in t):
+            continue
+
+        #le mot doit faire au moins 3 lettres ça élimine les mots cles bizarres
+        if len(t) < 3:
+            continue
+
+        #le mot doit commencer par une lettre
+        if not t[0].isalpha():
+            continue
+
+        # met en majuscule
+        t_propre = t.capitalize()
+
+        # on garde si ce n'est pas un doublon
+        if t_propre not in donnees_nettoyees:
+            donnees_nettoyees.append(t_propre)
+
     return donnees_nettoyees
 
 
