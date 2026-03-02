@@ -10,21 +10,29 @@ eq_recherche = '(("lung cancer"[Title/Abstract]) OR ("breast cancer"[Title/Abstr
 resultat_max = 80000
 #xml ici car c'est comme ça que PubMed envoie les donnees et c'st plus simple que du texte brut
 def extraire_donnees_article(article_xml):
-    auteurs = article_xml.findall('.//Author')#cherche la balise author pour la liste des auteurs
+    import re
+    auteurs = article_xml.findall('.//Author')
     if not auteurs: 
         return None
     premier = auteurs[0]
     nom = premier.findtext('LastName')
     prenom = premier.findtext('ForeName')
-    nom_complet = f"{nom} {prenom}" if nom and prenom else (nom or "N/A") #cree le nom complet de l'auteur ou met N/A si pas dispo
-
-    affil_info = premier.find('.//AffiliationInfo/Affiliation')#cherche la balise affiliation dans la baslise  affiliationinfo pour trouver l'institution de l auteur
-    if affil_info is not None and affil_info.text:
-        info = affil_info.text.strip() # info recup tout le texte de la balise affiliation et on nettoie les espaces vides strip
+    initiales = premier.findtext('Initials')
+    initiales_final = ""
+    if initiales:
+        initiales_final = "".join([c for c in initiales if c.isupper()])#ne garde que les majuscules
         
-        #return un dictionnaire avec uniquement les infos auteur et institution
+    #si les initiales sont vides ou bizarres, on les fais depuis le prnom
+    if not initiales_final and prenom:
+        parties = re.split(r'[\s\-]+', prenom)#dcoupe le prenom par espace ou tiret
+        initiales_final = "".join([p[0].upper() for p in parties if p])
+    nom_final = f"{nom} {initiales_final}" if nom and initiales_final else (nom or "N/A")#met tout ensemble
+
+    affil_info = premier.find('.//AffiliationInfo/Affiliation')
+    if affil_info is not None and affil_info.text:
+        info = affil_info.text.strip()
         return {
-            "nom_auteur": nom_complet,
+            "nom_auteur": nom_final,
             "institution": info
         }
     return None
