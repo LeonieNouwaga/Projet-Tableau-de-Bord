@@ -13,7 +13,7 @@ def extraire_donnees_article(article_xml):
     import re
     auteurs = article_xml.findall('.//Author')
     if not auteurs: 
-        return None
+        return None 
     premier = auteurs[0]
     nom = premier.findtext('LastName')
     prenom = premier.findtext('ForeName')
@@ -102,7 +102,7 @@ def main():
 
     #regroupe tout et limite 80000
     df_global = pd.concat(tous_dfs, ignore_index=True).head(resultat_max)
-
+    df_global[['institution']].to_csv("all_affiliations.csv", index=False)
     #affiliations.csv
     df_affil = df_global[['institution']].drop_duplicates().reset_index(drop=True)
     df_affil['id_affiliation'] = df_affil.index + 1
@@ -115,8 +115,9 @@ def main():
     df_final[['nom_auteur', 'id_affiliation']].to_csv("auteurs_affiliations.csv", index=False)
 
     print("extraction terminee")
-    print(f"- Articles traites : {len(df_global)}")
-    print(f"- Affiliations uniques : {len(df_affil)}")
+    print(f"Articles traites : {len(df_global)}")
+    print(f"Affiliations uniques : {len(df_affil)}")
+    print(f"all_affiliations.csv ({len(df_global)} lignes)")
     print("Fichiers générés : affiliations.csv, auteurs_affiliations.csv")
 
 if __name__ == '__main__':
